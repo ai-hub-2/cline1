@@ -538,34 +538,52 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 											onClick={() => setIsTodoExpanded(!isTodoExpanded)}
 											style={{
 												marginTop: "6px",
-												padding: "6px 8px",
+												padding: "8px 12px",
 												backgroundColor:
-													"color-mix(in srgb, var(--vscode-badge-foreground) 10%, transparent)",
+													"color-mix(in srgb, var(--vscode-charts-green) 15%, transparent)",
 												borderRadius: "3px",
 												fontSize: "12px",
 												cursor: "pointer",
 												transition: "background-color 0.2s ease",
+												border: "1px solid color-mix(in srgb, var(--vscode-charts-green) 30%, transparent)",
 											}}
 											onMouseEnter={(e) => {
 												e.currentTarget.style.backgroundColor =
-													"color-mix(in srgb, var(--vscode-badge-foreground) 20%, transparent)"
+													"color-mix(in srgb, var(--vscode-charts-green) 25%, transparent)"
 											}}
 											onMouseLeave={(e) => {
 												e.currentTarget.style.backgroundColor =
-													"color-mix(in srgb, var(--vscode-badge-foreground) 10%, transparent)"
+													"color-mix(in srgb, var(--vscode-charts-green) 15%, transparent)"
 											}}>
 											<div
 												style={{
 													display: "flex",
 													alignItems: "center",
 													justifyContent: "space-between",
+													gap: "8px",
 												}}>
-												<span style={{ fontWeight: "bold", color: "var(--vscode-charts-green)" }}>
-													All steps completed!
-												</span>
+												<div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+													<span style={{ fontWeight: "bold", color: "var(--vscode-charts-green)" }}>
+														All {todoInfo.totalCount} steps completed!
+													</span>
+												</div>
 												<span
-													className={`codicon codicon-chevron-${isTodoExpanded ? "down" : "right"}`}></span>
+													className={`codicon codicon-chevron-${isTodoExpanded ? "down" : "right"}`}
+													style={{ color: "var(--vscode-charts-green)" }}></span>
 											</div>
+											{isTodoExpanded && (
+												<div
+													style={{
+														marginTop: "2px",
+														fontSize: "11px",
+														color: "var(--vscode-descriptionForeground)",
+														lineHeight: "1.4",
+													}}>
+													<div style={{ marginBottom: "2px" }}>
+														New steps will be generated if you continue the task
+													</div>
+												</div>
+											)}
 										</div>
 									)
 								}

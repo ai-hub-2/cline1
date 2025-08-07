@@ -271,8 +271,17 @@ Keeping the todo list updated helps track progress and ensures nothing is missed
 				}
 				// Every item on the list has been completed. Hooray!
 				else if (completedItems === totalItems && totalItems > 0) {
-					progressBasedMessageStub =
-						"\n\n**Note:** All items appear complete! If the task is finished, use attempt_completion. Otherwise, add any remaining steps."
+					progressBasedMessageStub = `\n\n**🎉 EXCELLENT! All ${totalItems} items have been completed!**
+
+**Completed Items:**
+${this.taskState.currentFocusChainChecklist}
+
+**Next Steps:**
+- If the task is fully complete and meets all requirements, use attempt_completion
+- If you've discovered additional work that wasn't in the original scope (new features, improvements, edge cases, etc.), create a new task_progress list with those items
+- If there are related tasks or follow-up items the user might want, you can suggest them in a new checklist
+
+**Remember:** Only use attempt_completion if you're confident the task is truly finished. If there's any remaining work, create a new focus chain list to track it.`
 				}
 
 				// Return with progress-based stub
