@@ -168,6 +168,8 @@ export class Controller {
 		const {
 			autoApprovalSettings,
 			browserSettings,
+			FocusChainSettings,
+			FocusChainFeatureFlagEnabled,
 			preferredLanguage,
 			openaiReasoningEffort,
 			mode,
@@ -196,6 +198,12 @@ export class Controller {
 			}
 			await updateGlobalState(this.context, "autoApprovalSettings", updatedAutoApprovalSettings)
 		}
+		// Apply remote feature flag gate to focus chain settings
+		const effectiveFocusChainSettings = {
+			...(FocusChainSettings || { enabled: false, remindClineInterval: 10 }),
+			enabled: Boolean(FocusChainSettings?.enabled) && Boolean(FocusChainFeatureFlagEnabled),
+		}
+
 		this.task = new Task(
 			this.context,
 			this.mcpHub,
@@ -207,6 +215,7 @@ export class Controller {
 			apiConfiguration,
 			autoApprovalSettings,
 			browserSettings,
+			effectiveFocusChainSettings,
 			preferredLanguage,
 			openaiReasoningEffort,
 			mode,
@@ -661,6 +670,8 @@ export class Controller {
 			taskHistory,
 			autoApprovalSettings,
 			browserSettings,
+			FocusChainSettings,
+			FocusChainFeatureFlagEnabled,
 			preferredLanguage,
 			openaiReasoningEffort,
 			mode,
@@ -709,11 +720,14 @@ export class Controller {
 			currentTaskItem,
 			checkpointTrackerErrorMessage,
 			clineMessages,
+			currentFocusChainChecklist: this.task?.taskState.currentFocusChainChecklist || null,
 			taskHistory: processedTaskHistory,
 			shouldShowAnnouncement,
 			platform,
 			autoApprovalSettings,
 			browserSettings,
+			FocusChainSettings,
+			FocusChainFeatureFlagEnabled,
 			preferredLanguage,
 			openaiReasoningEffort,
 			mode,
