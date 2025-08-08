@@ -1,0 +1,42 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Install dependencies (webview-ui)
+        run: npm ci
+        working-directory: webview-ui
+
+      - name: Build webview-ui
+        run: npm run build
+        working-directory: webview-ui
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Deploy prebuilt assets from the Vite output directory
+          command: pages deploy webview-ui/build --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'cline-webview-ui' }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
