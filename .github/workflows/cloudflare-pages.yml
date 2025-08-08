@@ -1,12 +1,59 @@
-name: Deploy to Cloudflare Pages
+name: CI & Deploy to Cloudflare Pages
 
 on:
     push:
-        branches: [main, master]
+        branches: ["**"]
+    pull_request:
     workflow_dispatch:
 
+concurrency:
+    group: pages-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
+    build:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js (root)
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "lts/*"
+                  cache: "npm"
+                  cache-dependency-path: |
+                      package-lock.json
+                      webview-ui/package-lock.json
+
+            - name: Install dependencies (root)
+              run: npm ci
+
+            - name: Generate protos
+              run: npm run protos
+
+            - name: Install dependencies (webview-ui)
+              run: npm ci
+              working-directory: webview-ui
+
+            - name: Build webview-ui
+              run: npm run build
+              working-directory: webview-ui
+
+            - name: Run webview tests
+              run: npm run test:webview
+              working-directory: webview-ui
+
+            - name: Upload build artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: webview-build
+                  path: webview-ui/build
+
     deploy:
+        needs: build
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -15,32 +62,18 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
+            - name: Download build artifact
+              uses: actions/download-artifact@v4
               with:
-                  node-version: "lts/*"
-                  cache: "npm"
+                  name: webview-build
+                  path: webview-ui/build
 
-            - name: Install dependencies (root)
-              run: npm ci
-
-            - name: Install dependencies (webview-ui)
-              run: npm ci
-              working-directory: webview-ui
-
-            - name: Build webview-ui
-              run: |
-                  cd ..
-                  npm run protos
-                  cd webview-ui
-                  npm run build
-              working-directory: webview-ui
-
-            - name: Deploy to Cloudflare Pages
+            - name: Deploy to Cloudflare Pages (Preview/Prod based on branch)
               uses: cloudflare/wrangler-action@v3
               with:
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                   accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-                  # Deploy prebuilt assets from the Vite output directory
-                  command: pages deploy webview-ui/build --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'cline-webview-ui' }}
+                  command: >-
+                      pages deploy --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'cline-webview-ui' }}
+                      --branch ${{ github.ref_name }}
                   gitHubToken: ${{ secrets.GITHUB_TOKEN }}
