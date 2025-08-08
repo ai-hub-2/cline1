@@ -7,6 +7,15 @@
 	</head>
 	<body>
 		<div id="root"></div>
+		<script>
+			// Enable browser-only mode if not running inside VS Code webview
+			if (typeof window.acquireVsCodeApi !== "function") {
+				window.__is_standalone__ = true
+				window.WEBVIEW_PROVIDER_TYPE = "tab"
+				// Provide a no-op standalonePostMessage to avoid errors when UI tries to post messages
+				window.standalonePostMessage = function noop() {}
+			}
+		</script>
 		<script type="module" src="/src/main.tsx"></script>
 	</body>
 </html>
