@@ -1,0 +1,9 @@
+{
+  // Cloudflare Pages configuration via Wrangler
+  // Update "name" after creating your Pages project if desired
+  "name": "cline-webview-ui",
+  // The directory containing the static assets to deploy
+  "pages_build_output_dir": "./webview-ui/build",
+  // Required when using wrangler configuration with Pages
+  "compatibility_date": "2025-05-01"
+}

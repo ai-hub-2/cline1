@@ -64,14 +64,7 @@ export const DropdownContainer = styled.div<{ zIndex?: number }>`
 	}
 `
 
-declare module "vscode" {
-	interface LanguageModelChatSelector {
-		vendor?: string
-		family?: string
-		version?: string
-		id?: string
-	}
-}
+// vscode LanguageModelChatSelector type is declared in src/types/vscode-lm.d.ts for build-time only
 
 const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, isPopup, currentMode }: ApiOptionsProps) => {
 	// Use full context state for immediate save payload
