@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.21.1
+
+### Patch Changes
+
+- 4ab8559: Support sending context to active webview when editor panels are opened.
+
 ## [3.21.0]
 
 - Add support for GPT-5 model family including GPT-5, GPT-5 Mini, and GPT-5 Nano with prompt caching support and set GPT-5 as the new default model
