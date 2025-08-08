@@ -137,6 +137,16 @@ For example, when working with a local web server, you can use 'Restore Workspac
 
 <img width="2000" height="0" src="https://github.com/user-attachments/assets/ee14e6f7-20b8-4391-9091-8e8e25561929"><br>
 
+## Cloudflare Pages (Git integration)
+
+When connecting this repo in the Cloudflare Pages dashboard, set:
+
+- Build command: `npm ci && npm run protos && cd webview-ui && npm ci && npm run build`
+- Build output directory: `webview-ui/build`
+- Environment: Node LTS
+
+Alternatively, rely on wrangler.toml in the repo root which declares `pages_build_output_dir`.
+
 ## Contributing
 
 To contribute to the project, start with our [Contributing Guide](CONTRIBUTING.md) to learn the basics. You can also join our [Discord](https://discord.gg/cline) to chat with other contributors in the `#contributors` channel. If you're looking for full-time work, check out our open positions on our [careers page](https://cline.bot/join-us)!
