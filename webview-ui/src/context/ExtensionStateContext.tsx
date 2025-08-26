@@ -258,6 +258,13 @@ export const ExtensionStateContextProvider: React.FC<{
 
 	// Subscribe to state updates and UI events using the gRPC streaming API
 	useEffect(() => {
+		// In standalone/browser mode, skip VS Code gRPC subscriptions and hydrate immediately
+		if ((window as any).__is_standalone__) {
+			setShowWelcome(true)
+			setDidHydrateState(true)
+			return
+		}
+
 		// Use the already defined webview provider type
 		const webviewType = currentProviderType
 

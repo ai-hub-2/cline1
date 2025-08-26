@@ -2,11 +2,27 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/vite.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Cline Webview</title>
+		<title>Cline</title>
 	</head>
 	<body>
 		<div id="root"></div>
+		<script>
+			// Enable browser-only mode if not running inside VS Code webview
+			if (typeof window.acquireVsCodeApi !== "function") {
+				window.__is_standalone__ = true
+				window.WEBVIEW_PROVIDER_TYPE = "tab"
+				// Provide a no-op standalonePostMessage to avoid errors when UI tries to post messages
+				window.standalonePostMessage = function noop() {}
+				// Inject default VS Code-like CSS variables for standalone rendering
+				const style = document.createElement("style")
+				style.textContent = `:root{--vscode-input-background:#1e1e1e;--vscode-input-foreground:#cccccc;--vscode-sideBar-background:#252526;--vscode-foreground:#cccccc;--vscode-editor-foreground:#cccccc;--vscode-foreground-muted:#9da0a6;--vscode-descriptionForeground:#9da0a6;--vscode-input-placeholderForeground:#9da0a6;--vscode-button-background:#0e639c;--vscode-button-foreground:#ffffff;--vscode-editor-background:#1e1e1e;--vscode-list-activeSelectionBackground:#094771;--vscode-focus-border:#007fd4;--vscode-quickInputList-focusForeground:#ffffff;--vscode-quickInput-background:#252526;--vscode-input-border:#3c3c3c;--vscode-badge-background:#4d4d4d;--vscode-badge-foreground:#ffffff;--vscode-sideBar-border:#3c3c3c;--vscode-diffEditor-removedLineBackground:#ff000033;--vscode-diffEditor-insertedLineBackground:#00ff0033;--vscode-editor-inactiveSelectionBackground:#3a3d41;--vscode-titleBar-inactiveForeground:#9da0a6;--vscode-scrollbarSlider-background:#6b6b6b66;--vscode-scrollbarSlider-hoverBackground:#6b6b6b88;--vscode-scrollbarSlider-activeBackground:#bfbfbf8a;--vscode-input-border: #3c3c3c;--vscode-focusBorder:#007fd4;--vscode-badge-background:#4d4d4d;--vscode-badge-foreground:#ffffff;}`
+				try {
+					document.head.appendChild(style)
+				} catch (e) {}
+			}
+		</script>
 		<script type="module" src="/src/main.tsx"></script>
 	</body>
 </html>
