@@ -16,6 +16,21 @@ export abstract class ProtoBusClient {
 		encodeRequest: (_: TRequest) => unknown,
 		decodeResponse: (_: { [key: string]: any }) => TResponse,
 	): Promise<TResponse> {
+		// Standalone/browser fallback: return a benign default to keep UI responsive
+		if ((window as any).__is_standalone__) {
+			return new Promise<TResponse>((resolve) => {
+				setTimeout(() => {
+					try {
+						// Attempt to decode an empty object to match expected shape
+						const resp = this.decode({}, decodeResponse) as TResponse
+						resolve(resp)
+					} catch {
+						// Fallback to an empty object cast which UI should guard against
+						resolve({} as TResponse)
+					}
+				}, 0)
+			})
+		}
 		return new Promise((resolve, reject) => {
 			const requestId = uuidv4()
 
@@ -58,6 +73,17 @@ export abstract class ProtoBusClient {
 		decodeResponse: (_: { [key: string]: any }) => TResponse,
 		callbacks: Callbacks<TResponse>,
 	): () => void {
+		// Standalone/browser fallback: immediately complete stream
+		if ((window as any).__is_standalone__) {
+			setTimeout(() => {
+				try {
+					if (callbacks && callbacks.onComplete) callbacks.onComplete()
+				} catch (error) {
+					console.warn("Standalone streaming fallback onComplete failed:", error)
+				}
+			}, 0)
+			return () => {}
+		}
 		const requestId = uuidv4()
 		// Set up listener for streaming responses
 		const handleResponse = (event: MessageEvent) => {
