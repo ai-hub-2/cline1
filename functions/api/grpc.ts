@@ -1,4 +1,4 @@
-export const onRequestPost: PagesFunction = async ({ request }) => {
+export const onRequestPost: PagesFunction = async ({ request, env }) => {
 	try {
 		const body = await request.json()
 		const service: string = body?.service || ""
@@ -15,7 +15,21 @@ export const onRequestPost: PagesFunction = async ({ request }) => {
 		}
 
 		if (service === "cline.StateService" && method === "getLatestState") {
-			// Return a realistic initial state snapshot
+			// Try to read from D1
+			let row: any | null = null
+			try {
+				// @ts-ignore DB bound by wrangler [[d1_databases]]
+				const db = (env as any).DB as D1Database
+				await db.exec("CREATE TABLE IF NOT EXISTS state (id INTEGER PRIMARY KEY, state_json TEXT NOT NULL);")
+				const sel = await db.prepare("SELECT state_json FROM state WHERE id=1").first<any>()
+				row = sel || null
+			} catch (e) {}
+
+			if (row?.state_json) {
+				return json(JSON.parse(row.state_json))
+			}
+
+			// Default snapshot if none in DB
 			const state = {
 				version: "web-standalone",
 				clineMessages: [],
@@ -46,6 +60,12 @@ export const onRequestPost: PagesFunction = async ({ request }) => {
 				welcomeViewCompleted: false,
 				mcpResponsesCollapsed: false,
 			}
+			try {
+				// @ts-ignore
+				const db = (env as any).DB as D1Database
+				await db.prepare("DELETE FROM state WHERE id=1").run()
+				await db.prepare("INSERT INTO state (id, state_json) VALUES (1, ?)\n").bind(JSON.stringify(state)).run()
+			} catch (e) {}
 			return json(state)
 		}
 

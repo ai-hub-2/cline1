@@ -1,3 +1,7 @@
 name = "cline-webview-ui"
 pages_build_output_dir = "./webview-ui/build"
 compatibility_date = "2025-05-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cline_db"
