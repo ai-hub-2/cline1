@@ -69,6 +69,50 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
 			return json(state)
 		}
 
+		// TaskService handlers (D1-backed)
+		if (service === "cline.TaskService") {
+			// @ts-ignore
+			const db = (env as any).DB as D1Database
+			await db.exec(
+				"CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, ts INTEGER, content TEXT, favorite INTEGER DEFAULT 0);",
+			)
+			if (method === "getTaskHistory") {
+				const rows = await db.prepare("SELECT id, ts, content, favorite FROM tasks ORDER BY ts DESC").all()
+				return json({ items: rows.results || [] })
+			}
+			if (method === "deleteAllTaskHistory") {
+				await db.prepare("DELETE FROM tasks").run()
+				return json({ count: 0 })
+			}
+			if (method === "newTask") {
+				const id = crypto.randomUUID()
+				const ts = Date.now()
+				const content = typeof message?.task === "string" ? message.task : JSON.stringify(message?.task || {})
+				await db.prepare("INSERT INTO tasks (id, ts, content, favorite) VALUES (?, ?, ?, 0)").bind(id, ts, content).run()
+				return json({})
+			}
+			if (method === "deleteTasksWithIds") {
+				const ids: string[] = message?.values || []
+				for (const id of ids) await db.prepare("DELETE FROM tasks WHERE id=?").bind(id).run()
+				return json({})
+			}
+			if (method === "toggleTaskFavorite") {
+				const id: string = message?.id || message?.value
+				await db.exec("UPDATE tasks SET favorite = CASE favorite WHEN 1 THEN 0 ELSE 1 END WHERE id='" + id + "';")
+				return json({})
+			}
+		}
+
+		// ModelsService minimal handlers
+		if (service === "cline.ModelsService") {
+			if (method === "refreshOpenRouterModels" || method === "refreshGroqModels" || method === "refreshBasetenModels") {
+				return json({ models: {} })
+			}
+			if (method === "refreshOpenAiModels") {
+				return json({ values: [] })
+			}
+		}
+
 		// Default: not implemented
 		return new Response(JSON.stringify({ error: `Not implemented: ${service}.${method}` }), {
 			status: 501,
