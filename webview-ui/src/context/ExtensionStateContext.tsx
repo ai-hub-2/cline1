@@ -260,8 +260,24 @@ export const ExtensionStateContextProvider: React.FC<{
 	useEffect(() => {
 		// In standalone/browser mode, skip VS Code gRPC subscriptions and hydrate immediately
 		if ((window as any).__is_standalone__) {
-			setShowWelcome(true)
-			setDidHydrateState(true)
+			// Fetch initial real state from Pages Function via ProtoBus client
+			StateServiceClient.getLatestState(EmptyRequest.create({}))
+				.then((resp: any) => {
+					try {
+						setState((prev) => ({ ...prev, ...(resp || {}) }))
+						setShowWelcome(!(resp?.welcomeViewCompleted ?? false))
+						setDidHydrateState(true)
+					} catch (error) {
+						console.error("Standalone hydrate error:", error)
+						setShowWelcome(true)
+						setDidHydrateState(true)
+					}
+				})
+				.catch((error) => {
+					console.error("Standalone initial state fetch failed:", error)
+					setShowWelcome(true)
+					setDidHydrateState(true)
+				})
 			return
 		}
 

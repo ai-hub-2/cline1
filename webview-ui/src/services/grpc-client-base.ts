@@ -16,20 +16,24 @@ export abstract class ProtoBusClient {
 		encodeRequest: (_: TRequest) => unknown,
 		decodeResponse: (_: { [key: string]: any }) => TResponse,
 	): Promise<TResponse> {
-		// Standalone/browser fallback: return a benign default to keep UI responsive
+		// Standalone/browser: call Cloudflare Pages Function
 		if ((window as any).__is_standalone__) {
-			return new Promise<TResponse>((resolve) => {
-				setTimeout(() => {
-					try {
-						// Attempt to decode an empty object to match expected shape
-						const resp = this.decode({}, decodeResponse) as TResponse
-						resolve(resp)
-					} catch {
-						// Fallback to an empty object cast which UI should guard against
-						resolve({} as TResponse)
-					}
-				}, 0)
+			const payload = {
+				service: (this as any).serviceName,
+				method: methodName,
+				message: this.encode(request, encodeRequest),
+			}
+			const res = await fetch("/api/grpc", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify(payload),
 			})
+			if (!res.ok) {
+				throw new Error(`HTTP ${res.status}`)
+			}
+			const data = await res.json()
+			const msg = data?.message ?? data
+			return this.decode(msg, decodeResponse) as TResponse
 		}
 		return new Promise((resolve, reject) => {
 			const requestId = uuidv4()
