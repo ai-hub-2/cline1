@@ -54,6 +54,14 @@ export const onRequestGet: PagesFunction = async ({ request }) => {
 				send({ value: JSON.stringify({}) })
 			}
 
+			if (service === "cline.FileService" && method === "subscribeToWorkspaceUpdates") {
+				send({ values: [] })
+			}
+
+			if (service === "cline.UiService" && method === "subscribeToChatButtonClicked") {
+				// No-op events; stream stays open
+			}
+
 			// Keep-alive pings
 			const interval = setInterval(ping, 15000)
 

@@ -113,6 +113,41 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
 			}
 		}
 
+		// AccountService minimal handlers
+		if (service === "cline.AccountService") {
+			// @ts-ignore
+			const db = (env as any).DB as D1Database
+			await db.exec(
+				"CREATE TABLE IF NOT EXISTS account (id INTEGER PRIMARY KEY, auth_state TEXT, user_json TEXT, orgs_json TEXT);",
+			)
+			if (method === "accountLoginClicked") {
+				await db.prepare("DELETE FROM account WHERE id=1").run()
+				await db
+					.prepare("INSERT INTO account (id, auth_state, user_json, orgs_json) VALUES (1, ?, ?, ?)")
+					.bind("signed_in", JSON.stringify({ id: "user-web" }), JSON.stringify([]))
+					.run()
+				return json({ value: "ok" })
+			}
+			if (method === "accountLogoutClicked") {
+				await db.prepare("DELETE FROM account WHERE id=1").run()
+				return json({})
+			}
+			if (method === "getUserOrganizations") {
+				const row = await db.prepare("SELECT orgs_json FROM account WHERE id=1").first<any>()
+				return json({ items: row?.orgs_json ? JSON.parse(row.orgs_json) : [] })
+			}
+		}
+
+		// FileService minimal handlers
+		if (service === "cline.FileService") {
+			if (method === "getRelativePaths") {
+				return json({ values: [] })
+			}
+			if (method === "searchFiles") {
+				return json({ results: [] })
+			}
+		}
+
 		// Default: not implemented
 		return new Response(JSON.stringify({ error: `Not implemented: ${service}.${method}` }), {
 			status: 501,
