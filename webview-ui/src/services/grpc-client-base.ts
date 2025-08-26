@@ -77,16 +77,25 @@ export abstract class ProtoBusClient {
 		decodeResponse: (_: { [key: string]: any }) => TResponse,
 		callbacks: Callbacks<TResponse>,
 	): () => void {
-		// Standalone/browser fallback: immediately complete stream
+		// Standalone/browser: stream via SSE
 		if ((window as any).__is_standalone__) {
-			setTimeout(() => {
+			const svc = (this as any).serviceName
+			const url = `/api/stream?service=${encodeURIComponent(svc)}&method=${encodeURIComponent(methodName)}`
+			const es = new EventSource(url)
+			es.onmessage = (evt) => {
 				try {
-					if (callbacks && callbacks.onComplete) callbacks.onComplete()
+					const data = JSON.parse(evt.data)
+					const resp = this.decode(data, decodeResponse)
+					callbacks.onResponse(resp)
 				} catch (error) {
-					console.warn("Standalone streaming fallback onComplete failed:", error)
+					console.warn("SSE parse/decode error:", error)
 				}
-			}, 0)
-			return () => {}
+			}
+			es.onerror = (err) => {
+				if (callbacks.onError) callbacks.onError(new Error("SSE error"))
+			}
+			// No explicit complete in SSE; consumer can close
+			return () => es.close()
 		}
 		const requestId = uuidv4()
 		// Set up listener for streaming responses
