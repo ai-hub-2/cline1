@@ -62,6 +62,22 @@ export const onRequestGet: PagesFunction = async ({ request }) => {
 				// No-op events; stream stays open
 			}
 
+			if (service === "cline.McpService" && method === "subscribeToMcpMarketplaceCatalog") {
+				send({ items: [] })
+			}
+
+			if (service === "cline.McpService" && method === "subscribeToMcpServers") {
+				send({ mcpServers: [] })
+			}
+
+			if (service === "cline.UiService" && method === "subscribeToSettingsButtonClicked") {
+				// No-op
+			}
+
+			if (service === "cline.UiService" && method === "subscribeToHistoryButtonClicked") {
+				// No-op
+			}
+
 			// Keep-alive pings
 			const interval = setInterval(ping, 15000)
 

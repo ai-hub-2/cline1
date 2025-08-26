@@ -148,6 +148,84 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
 			}
 		}
 
+		// McpService basic handlers
+		if (service === "cline.McpService") {
+			// @ts-ignore
+			const db = (env as any).DB as D1Database
+			await db.exec(
+				"CREATE TABLE IF NOT EXISTS mcp_servers (id TEXT PRIMARY KEY, config_json TEXT, enabled INTEGER DEFAULT 1);",
+			)
+			if (method === "refreshMcpMarketplace") {
+				return json({ items: [] })
+			}
+			if (method === "addRemoteMcpServer") {
+				const id = message?.id || crypto.randomUUID()
+				await db
+					.prepare("INSERT OR REPLACE INTO mcp_servers (id, config_json, enabled) VALUES (?, ?, 1)")
+					.bind(id, JSON.stringify(message || {}))
+					.run()
+				return json({ mcpServers: [] })
+			}
+			if (method === "deleteMcpServer") {
+				const id = message?.value || message?.id
+				await db.prepare("DELETE FROM mcp_servers WHERE id=?").bind(id).run()
+				return json({ mcpServers: [] })
+			}
+			if (method === "toggleMcpServer" || method === "toggleToolAutoApprove") {
+				return json({ mcpServers: [] })
+			}
+			if (method === "restartMcpServer") {
+				return json({ mcpServers: [] })
+			}
+		}
+
+		// Expanded UI handlers
+		if (service === "cline.UiService") {
+			if (method === "scrollToSettings") {
+				return json({ key: "settings", value: "ok" })
+			}
+			if (method === "openUrl" || method === "openWalkthrough") {
+				return json({})
+			}
+		}
+
+		// Expanded ModelsService lists
+		if (service === "cline.ModelsService") {
+			if (method === "refreshOpenRouterModels") {
+				return json({ models: { "openrouter/standard": { id: "openrouter/standard", name: "OpenRouter Standard" } } })
+			}
+			if (method === "refreshGroqModels") {
+				return json({ models: { "groq/llama": { id: "groq/llama", name: "Groq LLaMA" } } })
+			}
+			if (method === "refreshBasetenModels") {
+				return json({ models: { "baseten/tgi": { id: "baseten/tgi", name: "Baseten TGI" } } })
+			}
+			if (method === "refreshOpenAiModels") {
+				return json({ values: ["gpt-4o", "gpt-4.1-mini"] })
+			}
+		}
+
+		// Enhanced FileService operations
+		if (service === "cline.FileService") {
+			if (
+				method === "copyToClipboard" ||
+				method === "openFile" ||
+				method === "openImage" ||
+				method === "openMention" ||
+				method === "openTaskHistory"
+			) {
+				return json({})
+			}
+			if (
+				method === "toggleClineRule" ||
+				method === "toggleCursorRule" ||
+				method === "toggleWorkflow" ||
+				method === "refreshRules"
+			) {
+				return json({})
+			}
+		}
+
 		// Default: not implemented
 		return new Response(JSON.stringify({ error: `Not implemented: ${service}.${method}` }), {
 			status: 501,
